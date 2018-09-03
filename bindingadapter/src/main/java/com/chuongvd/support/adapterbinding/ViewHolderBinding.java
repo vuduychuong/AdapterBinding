@@ -1,22 +1,22 @@
-package com.chuongvd.bindingadapter.widget.adapter;
+package com.chuongvd.support.adapterbinding;
 
 import android.databinding.ViewDataBinding;
 import android.support.v7.widget.RecyclerView;
 
-public class BaseViewHolderBinding<BINDINGVIEW extends ViewDataBinding, MODEL>
+public class ViewHolderBinding<BINDINGVIEW extends ViewDataBinding, MODEL>
         extends RecyclerView.ViewHolder {
 
     public BINDINGVIEW mBinding;
-    public BaseAdapterBinding.OnRecyclerItemListener<MODEL> mListener;
-    private MODEL data;
+    public AdapterBinding.OnRecyclerItemListener<MODEL> mListener;
+    protected MODEL data;
 
-    public BaseViewHolderBinding(BINDINGVIEW binding) {
+    public ViewHolderBinding(BINDINGVIEW binding) {
         super(binding.getRoot());
         mBinding = binding;
     }
 
-    public BaseViewHolderBinding(BINDINGVIEW binding,
-            BaseAdapterBinding.OnRecyclerItemListener<MODEL> listener) {
+    public ViewHolderBinding(BINDINGVIEW binding,
+            AdapterBinding.OnRecyclerItemListener<MODEL> listener) {
         super(binding.getRoot());
         mBinding = binding;
         mListener = listener;

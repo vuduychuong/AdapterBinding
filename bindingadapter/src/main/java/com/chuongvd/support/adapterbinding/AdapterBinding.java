@@ -1,17 +1,16 @@
-package com.chuongvd.bindingadapter.widget.adapter;
+package com.chuongvd.support.adapterbinding;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import com.chuongvd.bindingadapter.R;
-import com.chuongvd.bindingadapter.databinding.ItemNoDataBinding;
+import com.chuongvd.support.adapterbinding.databinding.ItemNoDataBinding;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseAdapterBinding<VIEWHOLDER extends BaseViewHolderBinding, MODEL>
-        extends RecyclerView.Adapter<BaseViewHolderBinding> {
+public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL>
+        extends RecyclerView.Adapter<ViewHolderBinding> {
 
     public static final int TYPE_NO_DATA = 0;
     public static final int TYPE_NORMAL = 1;
@@ -25,21 +24,21 @@ public abstract class BaseAdapterBinding<VIEWHOLDER extends BaseViewHolderBindin
 
     protected abstract VIEWHOLDER getViewHolder(ViewGroup parent, LayoutInflater inflater);
 
-    public BaseAdapterBinding(Context context, List<MODEL> list) {
+    public AdapterBinding(Context context, List<MODEL> list) {
         mContext = context;
         mList = list;
     }
 
-    public BaseAdapterBinding(List<MODEL> list) {
+    public AdapterBinding(List<MODEL> list) {
         mList = list;
     }
 
-    public BaseAdapterBinding(Context context) {
+    public AdapterBinding(Context context) {
         mContext = context;
         mList = new ArrayList<>();
     }
 
-    public BaseAdapterBinding(Context context,
+    public AdapterBinding(Context context,
             OnRecyclerItemListener<MODEL> itemListener) {
         mContext = context;
         mList = new ArrayList<>();
@@ -146,7 +145,7 @@ public abstract class BaseAdapterBinding<VIEWHOLDER extends BaseViewHolderBindin
         return mList == null ? mList = new ArrayList<>() : mList;
     }
 
-    private LayoutInflater getLayoutInflater(Context context) {
+    protected LayoutInflater getLayoutInflater(Context context) {
         mContext = context;
         return mLayoutInflater == null ? mLayoutInflater = LayoutInflater.from(context)
                 : mLayoutInflater;
@@ -157,18 +156,18 @@ public abstract class BaseAdapterBinding<VIEWHOLDER extends BaseViewHolderBindin
     }
 
     @Override
-    public BaseViewHolderBinding onCreateViewHolder(ViewGroup parent, int viewType) {
-        BaseViewHolderBinding baseViewHolderBinding;
+    public ViewHolderBinding onCreateViewHolder(ViewGroup parent, int viewType) {
+        ViewHolderBinding viewHolderBinding;
         if (viewType == TYPE_NO_DATA) {
-            baseViewHolderBinding =
+            viewHolderBinding =
                     getNoDataViewHolder(parent, getLayoutInflater(parent.getContext()));
         } else {
-            baseViewHolderBinding = getViewHolder(parent, getLayoutInflater(parent.getContext()));
+            viewHolderBinding = getViewHolder(parent, getLayoutInflater(parent.getContext()));
         }
-        return baseViewHolderBinding;
+        return viewHolderBinding;
     }
 
-    public BaseViewHolderBinding getNoDataViewHolder(ViewGroup parent, LayoutInflater inflater) {
+    public ViewHolderBinding getNoDataViewHolder(ViewGroup parent, LayoutInflater inflater) {
         return new NoDataViewHolder(ItemNoDataBinding.inflate(inflater, parent, false));
     }
 
@@ -178,7 +177,7 @@ public abstract class BaseAdapterBinding<VIEWHOLDER extends BaseViewHolderBindin
     }
 
     @Override
-    public void onBindViewHolder(BaseViewHolderBinding holder, int position) {
+    public void onBindViewHolder(ViewHolderBinding holder, int position) {
         if (getData().size() > 0) {
             holder.bindData(mList.get(position));
         } else {
@@ -235,7 +234,7 @@ public abstract class BaseAdapterBinding<VIEWHOLDER extends BaseViewHolderBindin
         }
     }
 
-    class NoDataViewHolder extends BaseViewHolderBinding<ItemNoDataBinding, String> {
+    class NoDataViewHolder extends ViewHolderBinding<ItemNoDataBinding, String> {
 
         NoDataViewHolder(ItemNoDataBinding binding) {
             super(binding);

@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.chuongvd.bindingadapter", appContext.getPackageName());
+        assertEquals("com.chuongvd.support.bindingadapter.test", appContext.getPackageName());
     }
 }
