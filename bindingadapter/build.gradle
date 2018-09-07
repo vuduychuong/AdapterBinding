@@ -22,10 +22,10 @@ ext {
 
   libraryDescription = 'This library support to implement adapter faster'
 
-  siteUrl = 'https://github.com/vuduychuong/BindingAdapter'
-  gitUrl = 'https://github.com/vuduychuong/BindingAdapter.git'
+  siteUrl = 'https://github.com/vuduychuong/AdapterBinding'
+  gitUrl = 'https://github.com/vuduychuong/AdapterBinding.git'
 
-  libraryVersion = '0.1.6'
+  libraryVersion = '0.1.7'
 
   developerId = 'chuongvd'
   developerName = 'Vu Duy Chuong'
