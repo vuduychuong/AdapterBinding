@@ -6,13 +6,13 @@ package com.chuongvd.support.adapterbinding;
  * @author Chuongvd
  */
 public class ItemSelectable {
-    private boolean mIsSelected;
+    private boolean selected;
 
     public boolean isSelected() {
-        return mIsSelected;
+        return selected;
     }
 
     public void setSelected(boolean selected) {
-        mIsSelected = selected;
+        this.selected = selected;
     }
 }

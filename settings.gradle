@@ -1,1 +1,1 @@
-include ':sample', ':bindingadapter'
+include ':sample', ':adapterbinding'
