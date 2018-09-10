@@ -1,9 +1,11 @@
 package com.chuongvd.support.adapterbinding;
 
 import android.content.Context;
+import android.support.v7.util.DiffUtil;
 import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 /**
  * Created on 9/3/18
@@ -17,8 +19,8 @@ public abstract class SelectableAdapter<VIEWHOLDER extends SelectableViewHolder,
     protected boolean mIsSelectedMode;
 
     public SelectableAdapter(Context context, OnRecyclerItemListener<MODEL> itemListener,
-            boolean isSelectedMode) {
-        super(context, itemListener);
+            boolean isSelectedMode, Executor executor, DiffUtil.ItemCallback<MODEL> diffCallback) {
+        super(context, itemListener, executor, diffCallback);
         mIsSelectedMode = isSelectedMode;
     }
 
@@ -47,22 +49,16 @@ public abstract class SelectableAdapter<VIEWHOLDER extends SelectableViewHolder,
     }
 
     public void removeSelectedState() {
-        int size = mList.size();
+        int size = getItemCount();
         for (int i = 0; i < size; i++) {
-            mList.get(i).setSelected(false);
+            getItem(i).setSelected(false);
             notifyItemChanged(i);
         }
     }
 
-    public void removeItem(int position) {
-        if (position < 0 || position >= mList.size()) return;
-        mList.remove(position);
-        notifyDataSetChanged();
-    }
-
     public int getSelectedCount() {
         int result = 0;
-        for (MODEL model : mList) {
+        for (MODEL model : getData()) {
             if (model.isSelected()) result++;
         }
         return result;
@@ -70,7 +66,7 @@ public abstract class SelectableAdapter<VIEWHOLDER extends SelectableViewHolder,
 
     public List<MODEL> getSelectedItems() {
         List<MODEL> list = new ArrayList<>();
-        for (MODEL model : mList) {
+        for (MODEL model : getData()) {
             if (model.isSelected()) list.add(model);
         }
         return list;

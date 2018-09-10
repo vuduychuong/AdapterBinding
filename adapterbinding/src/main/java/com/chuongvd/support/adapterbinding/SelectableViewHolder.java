@@ -1,7 +1,6 @@
 package com.chuongvd.support.adapterbinding;
 
 import android.databinding.ViewDataBinding;
-import com.chuongvd.support.adapterbinding.AdapterBinding.OnRecyclerItemListener;
 
 /**
  * Created on 9/3/18

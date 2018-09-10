@@ -1,10 +1,12 @@
 package com.chuongvd.sample;
 
 import android.content.Context;
+import android.support.v7.util.DiffUtil;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.chuongvd.sample.databinding.ItemSampleBinding;
+import com.chuongvd.support.adapterbinding.OnRecyclerItemListener;
 import com.chuongvd.support.adapterbinding.SelectableAdapter;
 import com.chuongvd.support.adapterbinding.SelectableViewHolder;
 
@@ -17,7 +19,20 @@ public class SampleAdapter extends SelectableAdapter<SampleAdapter.ViewHolder, S
 
     public SampleAdapter(Context context, OnRecyclerItemListener<SampleItem> itemListener,
             boolean isSelectedMode) {
-        super(context, itemListener, isSelectedMode);
+        super(context, itemListener, isSelectedMode, AppExecutors.getInstance().diskIO(),
+                new DiffUtil.ItemCallback<SampleItem>() {
+                    @Override
+                    public boolean areItemsTheSame(SampleItem oldItem, SampleItem newItem) {
+                        return oldItem.getName().equalsIgnoreCase(newItem.getName())
+                                && oldItem.getDescription()
+                                .equalsIgnoreCase(newItem.getDescription());
+                    }
+
+                    @Override
+                    public boolean areContentsTheSame(SampleItem oldItem, SampleItem newItem) {
+                        return oldItem.getDescription().equalsIgnoreCase(newItem.getDescription());
+                    }
+                });
     }
 
     @Override

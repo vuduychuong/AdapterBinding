@@ -1,6 +1,12 @@
 package com.chuongvd.support.adapterbinding;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.recyclerview.extensions.AsyncDifferConfig;
+import android.support.v7.recyclerview.extensions.AsyncListDiffer;
+import android.support.v7.recyclerview.extensions.ListAdapter;
+import android.support.v7.util.AdapterListUpdateCallback;
+import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -8,6 +14,7 @@ import android.view.ViewGroup;
 import com.chuongvd.support.adapterbinding.databinding.ItemNoDataBinding;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL>
         extends RecyclerView.Adapter<ViewHolderBinding> {
@@ -16,32 +23,21 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
     public static final int TYPE_NORMAL = 1;
     public String EMPTY_STRING = "";
     private Context mContext;
-    public List<MODEL> mList;
+    //    public List<MODEL> mList;
     private LayoutInflater mLayoutInflater;
     protected OnRecyclerItemListener<MODEL> mItemListener;
     private boolean isFirst = true;
     private boolean enableShowNoData = false;
+    private final AsyncListDiffer<MODEL> mDiffer;
 
     protected abstract VIEWHOLDER getViewHolder(ViewGroup parent, LayoutInflater inflater);
 
-    public AdapterBinding(Context context, List<MODEL> list) {
+    public AdapterBinding(Context context, OnRecyclerItemListener<MODEL> itemListener,
+            Executor executor, DiffUtil.ItemCallback<MODEL> diffCallback) {
+        mDiffer = new AsyncListDiffer<>(new AdapterListUpdateCallback(this),
+                new AsyncDifferConfig.Builder<>(diffCallback).setBackgroundThreadExecutor(executor)
+                        .build());
         mContext = context;
-        mList = list;
-    }
-
-    public AdapterBinding(List<MODEL> list) {
-        mList = list;
-    }
-
-    public AdapterBinding(Context context) {
-        mContext = context;
-        mList = new ArrayList<>();
-    }
-
-    public AdapterBinding(Context context,
-            OnRecyclerItemListener<MODEL> itemListener) {
-        mContext = context;
-        mList = new ArrayList<>();
         this.mItemListener = itemListener;
     }
 
@@ -81,9 +77,7 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
 
     public void setData(List<MODEL> data) {
         if (data == null) return;
-        getData().clear();
-        getData().addAll(data);
-        notifyDataSetChanged();
+        submitList(data);
         isFirst = false;
     }
 
@@ -110,7 +104,7 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
     }
 
     public boolean isEmpty() {
-        return mList.size() == 0;
+        return getItemCount() == 0;
     }
 
     public void setItemListener(OnRecyclerItemListener<MODEL> listener) {
@@ -142,7 +136,7 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
     }
 
     public List<MODEL> getData() {
-        return mList == null ? mList = new ArrayList<>() : mList;
+        return mDiffer.getCurrentList();
     }
 
     protected LayoutInflater getLayoutInflater(Context context) {
@@ -155,12 +149,12 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
         return mContext;
     }
 
+    @NonNull
     @Override
     public ViewHolderBinding onCreateViewHolder(ViewGroup parent, int viewType) {
         ViewHolderBinding viewHolderBinding;
         if (viewType == TYPE_NO_DATA) {
-            viewHolderBinding =
-                    getNoDataViewHolder(parent, getLayoutInflater(parent.getContext()));
+            viewHolderBinding = getNoDataViewHolder(parent, getLayoutInflater(parent.getContext()));
         } else {
             viewHolderBinding = getViewHolder(parent, getLayoutInflater(parent.getContext()));
         }
@@ -177,9 +171,9 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
     }
 
     @Override
-    public void onBindViewHolder(ViewHolderBinding holder, int position) {
-        if (getData().size() > 0) {
-            holder.bindData(mList.get(position));
+    public void onBindViewHolder(@NonNull ViewHolderBinding holder, int position) {
+        if (getItemCount() > 0) {
+            holder.bindData(getItem(position));
         } else {
             if (!isFirst && enableShowNoData) {
                 holder.bindData(EMPTY_STRING);
@@ -190,49 +184,72 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
         }
     }
 
+    /**
+     * Submits a new list to be diffed, and displayed.
+     * <p>
+     * If a list is already being displayed, a diff will be computed on a background thread, which
+     * will dispatch Adapter.notifyItem events on the main thread.
+     *
+     * @param list The new list to be displayed.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public void submitList(List<MODEL> list) {
+        mDiffer.submitList(list);
+    }
+
+    @SuppressWarnings("unused")
+    protected MODEL getItem(int position) {
+        return mDiffer.getCurrentList().get(position);
+    }
+
+    @Override
+    public int getItemCount() {
+        return mDiffer.getCurrentList().size();
+    }
+
     @Override
     public int getItemViewType(int position) {
-        if (getData().size() == 0) {
+        if (getItemCount() == 0) {
             return TYPE_NO_DATA;
         }
         return TYPE_NORMAL;
     }
 
-    @Override
-    public int getItemCount() {
-        if (getData().size() == 0) {
-            return 1;
-        }
-        return getData().size();
-    }
+//    @Override
+//    public int getItemCount() {
+//        if (getData().size() == 0) {
+//            return 1;
+//        }
+//        return getData().size();
+//    }
 
-    public void softUpdateListData(List<MODEL> newData) {
-        if (newData == null || newData.isEmpty()) {
-            mList.clear();
-            return;
-        }
-        int newSize = newData.size();
-        int oldSize = mList.size();
-        int minSize = Math.min(oldSize, newSize);
-        int maxSize = Math.max(oldSize, newSize);
-        for (int i = 0; i < minSize; i++) {
-            MODEL data = newData.get(i);
-            if (!data.equals(mList.get(i))) {
-                mList.remove(i);
-                mList.add(i, data);
-                notifyItemChanged(i);
-            }
-        }
-        for (int i = minSize; i < maxSize; i++) {
-            if (newSize > oldSize) {
-                mList.add(newData.get(i));
-                notifyItemRemoved(i);
-            } else {
-                mList.remove(newSize);
-                notifyItemRemoved(newSize);
-            }
-        }
-    }
+//    public void softUpdateListData(List<MODEL> newData) {
+//        if (newData == null || newData.isEmpty()) {
+//            mList.clear();
+//            return;
+//        }
+//        int newSize = newData.size();
+//        int oldSize = mList.size();
+//        int minSize = Math.min(oldSize, newSize);
+//        int maxSize = Math.max(oldSize, newSize);
+//        for (int i = 0; i < minSize; i++) {
+//            MODEL data = newData.get(i);
+//            if (!data.equals(mList.get(i))) {
+//                mList.remove(i);
+//                mList.add(i, data);
+//                notifyItemChanged(i);
+//            }
+//        }
+//        for (int i = minSize; i < maxSize; i++) {
+//            if (newSize > oldSize) {
+//                mList.add(newData.get(i));
+//                notifyItemRemoved(i);
+//            } else {
+//                mList.remove(newSize);
+//                notifyItemRemoved(newSize);
+//            }
+//        }
+//    }
 
     class NoDataViewHolder extends ViewHolderBinding<ItemNoDataBinding, String> {
 
@@ -247,9 +264,5 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
             }
             mBinding.setText(model);
         }
-    }
-
-    public interface OnRecyclerItemListener<MODEL> {
-        void onItemClick(int position, MODEL data);
     }
 }
