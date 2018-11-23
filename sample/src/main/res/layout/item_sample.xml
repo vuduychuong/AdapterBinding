@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
     <data>
+        <import type="android.view.View" />
         <variable
             name="item"
             type="com.chuongvd.sample.SampleItem"
+            />
+        <variable
+            name="selectMode"
+            type="android.databinding.ObservableBoolean"
             />
     </data>
     <LinearLayout
@@ -28,8 +33,9 @@
             android:id="@+id/checkbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="false"
             android:checked="@{ item.isSelected }"
+            android:clickable="false"
+            android:visibility="@{ selectMode ? View.VISIBLE : View.GONE }"
             />
     </LinearLayout>
 </layout>

@@ -38,8 +38,7 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
         mList = new ArrayList<>();
     }
 
-    public AdapterBinding(Context context,
-            OnRecyclerItemListener<MODEL> itemListener) {
+    public AdapterBinding(Context context, OnRecyclerItemListener<MODEL> itemListener) {
         mContext = context;
         mList = new ArrayList<>();
         this.mItemListener = itemListener;
@@ -51,23 +50,24 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
 
     public void add(MODEL MODEL) {
         getData().add(MODEL);
-        notifyItemChanged(getData().size() - 1);
         isFirst = false;
+        notifyItemChanged(getData().size() - 1);
     }
 
     public void add(List<MODEL> data) {
         int size = getData().size();
         getData().addAll(data);
+        isFirst = false;
         if (size == 0) {
             notifyDataSetChanged();
         } else {
             notifyItemInserted(size);
         }
-        isFirst = false;
     }
 
     public void addPreviousEnd(List<MODEL> data) {
         if (data.isEmpty()) return;
+        isFirst = false;
         if (getData().isEmpty()) {
             getData().addAll(data);
             notifyDataSetChanged();
@@ -76,18 +76,26 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
             getData().addAll(data);
             notifyItemRangeInserted(size - 1, data.size());
         }
-        isFirst = false;
     }
 
+    @Deprecated
     public void setData(List<MODEL> data) {
         if (data == null) return;
         getData().clear();
         getData().addAll(data);
-        notifyDataSetChanged();
         isFirst = false;
+        notifyDataSetChanged();
     }
 
-    public synchronized void remove(MODEL MODEL) {
+    @Deprecated
+    public void setDataRefresh(List<MODEL> data) {
+        if (data == null) return;
+        getData().clear();
+        getData().addAll(data);
+        softUpdateListData(data);
+    }
+
+    public void remove(MODEL MODEL) {
         int position = -1;
         for (int i = 0; i < getData().size(); i++) {
             if (!MODEL.equals(getData().get(i))) {
@@ -98,15 +106,15 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
         }
 
         if (position == -1) return;
-        removePosition(position);
         isFirst = false;
+        removePosition(position);
     }
 
-    public synchronized void removePosition(int position) {
+    public void removePosition(int position) {
         if (getData().size() < position) return;
         getData().remove(position);
-        notifyItemChanged(position);
         isFirst = false;
+        notifyItemRemoved(position);
     }
 
     public boolean isEmpty() {
@@ -118,27 +126,32 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
         notifyDataSetChanged();
     }
 
-    public synchronized void remove(List<MODEL> data) {
+    public void remove(List<MODEL> data) {
         getData().removeAll(data);
-        notifyDataSetChanged();
         isFirst = false;
+        notifyDataSetChanged();
     }
 
-    public synchronized void removeAll() {
+    public void removeAll() {
         getData().clear();
-        notifyDataSetChanged();
         isFirst = false;
+        notifyDataSetChanged();
     }
 
-    public synchronized void refreshData(List<MODEL> data) {
+    @Deprecated
+    public void refreshData(List<MODEL> data) {
         getData().clear();
         getData().addAll(data);
-        notifyDataSetChanged();
         isFirst = false;
+        notifyDataSetChanged();
     }
 
     public void setFirst(boolean first) {
         isFirst = first;
+    }
+
+    public boolean isFirst() {
+        return isFirst;
     }
 
     public List<MODEL> getData() {
@@ -159,8 +172,7 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
     public ViewHolderBinding onCreateViewHolder(ViewGroup parent, int viewType) {
         ViewHolderBinding viewHolderBinding;
         if (viewType == TYPE_NO_DATA) {
-            viewHolderBinding =
-                    getNoDataViewHolder(parent, getLayoutInflater(parent.getContext()));
+            viewHolderBinding = getNoDataViewHolder(parent, getLayoutInflater(parent.getContext()));
         } else {
             viewHolderBinding = getViewHolder(parent, getLayoutInflater(parent.getContext()));
         }
@@ -200,15 +212,24 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
 
     @Override
     public int getItemCount() {
-        if (getData().size() == 0) {
+        if (getData().size() == 0 && enableShowNoData && !isFirst) {
             return 1;
         }
         return getData().size();
     }
 
     public void softUpdateListData(List<MODEL> newData) {
+        isFirst = false;
         if (newData == null || newData.isEmpty()) {
+            if (mList.size() == 0) return;
+            int size = mList.size();
             mList.clear();
+            notifyDataSetChanged();
+            return;
+        }
+        if (mList.size() == 0) {
+            mList.addAll(newData);
+            notifyDataSetChanged();
             return;
         }
         int newSize = newData.size();
@@ -218,20 +239,86 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
         for (int i = 0; i < minSize; i++) {
             MODEL data = newData.get(i);
             if (!data.equals(mList.get(i))) {
-                mList.remove(i);
-                mList.add(i, data);
+                mList.set(i, data);
                 notifyItemChanged(i);
             }
         }
         for (int i = minSize; i < maxSize; i++) {
             if (newSize > oldSize) {
                 mList.add(newData.get(i));
-                notifyItemRemoved(i);
-            } else {
+                notifyItemInserted(i);
+            } else if (newSize < oldSize) {
                 mList.remove(newSize);
                 notifyItemRemoved(newSize);
             }
         }
+    }
+
+    public void updateBindableData(List<MODEL> data) {
+        if (data == null) return;
+        isFirst = false;
+        int oldSize = mList.size();
+        int newSize = data.size();
+        if (newSize == 0) {
+            mList.clear();
+            notifyDataSetChanged();
+            return;
+        }
+        if (oldSize == 0) {
+            mList.addAll(data);
+            notifyDataSetChanged();
+            return;
+        }
+        if (newSize < oldSize) {
+            for (int i = 0; i < newSize; i++) {
+                MODEL model = mList.get(i);
+                if (model instanceof BindableDataSupport) {
+                    ((BindableDataSupport) model).updateBindableData(data.get(i));
+                } else {
+                    if (!data.get(i).equals(mList.get(i))) {
+                        mList.set(i, data.get(i));
+                        notifyItemChanged(i);
+                    }
+                }
+            }
+            for (int i = newSize; i < oldSize; i++) {
+                mList.remove(newSize);
+            }
+            notifyItemRangeRemoved(newSize, oldSize - newSize);
+            return;
+        }
+        if (newSize == oldSize) {
+            for (int i = 0; i < newSize; i++) {
+                MODEL model = mList.get(i);
+                if (model instanceof BindableDataSupport) {
+                    ((BindableDataSupport) model).updateBindableData(data.get(i));
+                } else {
+                    if (!data.get(i).equals(mList.get(i))) {
+                        mList.set(i, data.get(i));
+                        notifyItemChanged(i);
+                    }
+                }
+            }
+            return;
+        }
+        /*
+          newSize > oldSize
+         */
+        for (int i = 0; i < oldSize; i++) {
+            MODEL model = mList.get(i);
+            if (model instanceof BindableDataSupport) {
+                ((BindableDataSupport) model).updateBindableData(data.get(i));
+            } else {
+                if (!data.get(i).equals(mList.get(i))) {
+                    mList.set(i, data.get(i));
+                    notifyItemChanged(i);
+                }
+            }
+        }
+        for (int i = oldSize; i < newSize; i++) {
+            mList.add(data.get(i));
+        }
+        notifyItemRangeInserted(oldSize, newSize - oldSize);
     }
 
     class NoDataViewHolder extends ViewHolderBinding<ItemNoDataBinding, String> {
