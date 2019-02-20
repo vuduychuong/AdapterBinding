@@ -8,8 +8,6 @@ import com.chuongvd.sample.databinding.ItemSampleBinding;
 import com.chuongvd.support.adapterbinding.ViewHolderBinding;
 import com.chuongvd.support.adapterbinding.sectionedrecyclerviewadapter.Section;
 import com.chuongvd.support.adapterbinding.sectionedrecyclerviewadapter.SectionParameters;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by chuongvd on 11/26/18.

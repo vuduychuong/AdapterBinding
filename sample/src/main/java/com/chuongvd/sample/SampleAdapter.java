@@ -4,19 +4,21 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import com.chuongvd.sample.databinding.ItemSampleBinding;
-import com.chuongvd.support.adapterbinding.SelectableAdapter;
-import com.chuongvd.support.adapterbinding.SelectableViewHolder;
+import com.chuongvd.support.adapterbinding.OnRecyclerItemListener;
+import com.chuongvd.support.adapterbinding.StateParameters;
+import com.chuongvd.support.adapterbinding.StatefulAdapterBinding;
 
 /**
  * Created on 9/3/18
  *
  * @author Chuongvd
  */
-public class SampleAdapter extends SelectableAdapter<SampleAdapter.ViewHolder, SampleItem> {
+public class SampleAdapter extends StatefulAdapterBinding<SampleAdapter.ViewHolder, SampleItem> {
 
     public SampleAdapter(Context context, OnRecyclerItemListener<SampleItem> itemListener,
             boolean isSelectedMode) {
-        super(context, itemListener, isSelectedMode);
+        super(context, StateParameters.builder().itemViewWillBeProvided().build(), itemListener,
+                isSelectedMode);
     }
 
     @Override
@@ -24,7 +26,8 @@ public class SampleAdapter extends SelectableAdapter<SampleAdapter.ViewHolder, S
         return new ViewHolder(ItemSampleBinding.inflate(inflater, parent, false), mItemListener);
     }
 
-    public class ViewHolder extends SelectableViewHolder<ItemSampleBinding, SampleItem> {
+    public class ViewHolder extends
+            com.chuongvd.support.adapterbinding.ViewHolderBinding<ItemSampleBinding, SampleItem> {
 
         public ViewHolder(ItemSampleBinding binding, OnRecyclerItemListener<SampleItem> listener) {
             super(binding, listener);

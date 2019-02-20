@@ -15,7 +15,7 @@ public class SectionViewHolder<BINDINGVIEW extends ViewDataBinding, MODEL>
     }
 
     public SectionViewHolder(BINDINGVIEW binding,
-            AdapterBinding.OnRecyclerItemListener<MODEL> listener) {
+            OnRecyclerItemListener<MODEL> listener) {
         super(binding, listener);
     }
 }

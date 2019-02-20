@@ -9,14 +9,19 @@ import com.chuongvd.support.adapterbinding.databinding.ItemNoDataBinding;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL>
+/**
+ * Using {@link StatefulAdapterBinding} insteads of.
+ * It should be private in next version
+ **/
+@Deprecated
+abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL>
         extends RecyclerView.Adapter<ViewHolderBinding> {
 
     public static final int TYPE_NO_DATA = 0;
     public static final int TYPE_NORMAL = 1;
     public String EMPTY_STRING = "";
     private Context mContext;
-    public List<MODEL> mList;
+    public List<MODEL> mList = new ArrayList<>();
     private LayoutInflater mLayoutInflater;
     protected OnRecyclerItemListener<MODEL> mItemListener;
     private boolean isFirst = true;
@@ -26,7 +31,7 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
 
     public AdapterBinding(Context context, List<MODEL> list) {
         mContext = context;
-        mList = list;
+        mList.addAll(list);
     }
 
     public AdapterBinding(List<MODEL> list) {
@@ -35,12 +40,10 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
 
     public AdapterBinding(Context context) {
         mContext = context;
-        mList = new ArrayList<>();
     }
 
     public AdapterBinding(Context context, OnRecyclerItemListener<MODEL> itemListener) {
         mContext = context;
-        mList = new ArrayList<>();
         this.mItemListener = itemListener;
     }
 
@@ -51,7 +54,13 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
     public void add(MODEL MODEL) {
         getData().add(MODEL);
         isFirst = false;
-        notifyItemChanged(getData().size() - 1);
+        notifyItemInserted(getData().size() - 1);
+    }
+
+    public void add(int position, MODEL MODEL) {
+        getData().add(position, MODEL);
+        isFirst = false;
+        notifyItemInserted(position);
     }
 
     public void add(List<MODEL> data) {
@@ -79,20 +88,14 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
     }
 
     @Deprecated
-    public void setData(List<MODEL> data) {
+    /**
+     * Using {@link #updateBindableData(List)} insteads of
+     */ public void setData(List<MODEL> data) {
         if (data == null) return;
         getData().clear();
         getData().addAll(data);
         isFirst = false;
         notifyDataSetChanged();
-    }
-
-    @Deprecated
-    public void setDataRefresh(List<MODEL> data) {
-        if (data == null) return;
-        getData().clear();
-        getData().addAll(data);
-        softUpdateListData(data);
     }
 
     public void remove(MODEL MODEL) {
@@ -218,44 +221,12 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
         return getData().size();
     }
 
-    public void softUpdateListData(List<MODEL> newData) {
-        isFirst = false;
-        if (newData == null || newData.isEmpty()) {
-            if (mList.size() == 0) return;
-            int size = mList.size();
+    public void updateBindableData(List<MODEL> data) {
+        if (data == null) {
             mList.clear();
             notifyDataSetChanged();
             return;
         }
-        if (mList.size() == 0) {
-            mList.addAll(newData);
-            notifyDataSetChanged();
-            return;
-        }
-        int newSize = newData.size();
-        int oldSize = mList.size();
-        int minSize = Math.min(oldSize, newSize);
-        int maxSize = Math.max(oldSize, newSize);
-        for (int i = 0; i < minSize; i++) {
-            MODEL data = newData.get(i);
-            if (!data.equals(mList.get(i))) {
-                mList.set(i, data);
-                notifyItemChanged(i);
-            }
-        }
-        for (int i = minSize; i < maxSize; i++) {
-            if (newSize > oldSize) {
-                mList.add(newData.get(i));
-                notifyItemInserted(i);
-            } else if (newSize < oldSize) {
-                mList.remove(newSize);
-                notifyItemRemoved(newSize);
-            }
-        }
-    }
-
-    public void updateBindableData(List<MODEL> data) {
-        if (data == null) return;
         isFirst = false;
         int oldSize = mList.size();
         int newSize = data.size();
@@ -321,7 +292,7 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
         notifyItemRangeInserted(oldSize, newSize - oldSize);
     }
 
-    class NoDataViewHolder extends ViewHolderBinding<ItemNoDataBinding, String> {
+    public class NoDataViewHolder extends ViewHolderBinding<ItemNoDataBinding, String> {
 
         NoDataViewHolder(ItemNoDataBinding binding) {
             super(binding);
@@ -334,9 +305,5 @@ public abstract class AdapterBinding<VIEWHOLDER extends ViewHolderBinding, MODEL
             }
             mBinding.setText(model);
         }
-    }
-
-    public interface OnRecyclerItemListener<MODEL> {
-        void onItemClick(int position, MODEL data);
     }
 }

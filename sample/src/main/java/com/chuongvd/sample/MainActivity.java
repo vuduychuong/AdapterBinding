@@ -4,13 +4,13 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import com.chuongvd.support.adapterbinding.AdapterBinding;
+import com.chuongvd.support.adapterbinding.OnRecyclerItemListener;
 import com.chuongvd.support.adapterbinding.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
-        implements AdapterBinding.OnRecyclerItemListener<SampleItem> {
+        implements OnRecyclerItemListener<SampleItem> {
 
     //    private SampleAdapter mAdapter;
 
