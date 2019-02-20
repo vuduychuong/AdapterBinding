@@ -1,3 +1,8 @@
+# TODO
+```StatefulAdapterBinding```:
+  - Add header & footer item
+  - Add swipe behavior
+
 # Adapter Binding
 Library to support build Adapter very fast and easy.
 
