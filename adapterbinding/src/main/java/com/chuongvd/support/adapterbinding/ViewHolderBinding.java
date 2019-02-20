@@ -7,7 +7,7 @@ public class ViewHolderBinding<BINDINGVIEW extends ViewDataBinding, MODEL>
         extends RecyclerView.ViewHolder {
 
     public BINDINGVIEW mBinding;
-    public AdapterBinding.OnRecyclerItemListener<MODEL> mListener;
+    public OnRecyclerItemListener<MODEL> mListener;
     protected MODEL data;
 
     public ViewHolderBinding(BINDINGVIEW binding) {
@@ -15,8 +15,7 @@ public class ViewHolderBinding<BINDINGVIEW extends ViewDataBinding, MODEL>
         mBinding = binding;
     }
 
-    public ViewHolderBinding(BINDINGVIEW binding,
-            AdapterBinding.OnRecyclerItemListener<MODEL> listener) {
+    public ViewHolderBinding(BINDINGVIEW binding, OnRecyclerItemListener<MODEL> listener) {
         super(binding.getRoot());
         mBinding = binding;
         mListener = listener;
